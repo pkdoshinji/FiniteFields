@@ -6,18 +6,18 @@ p is prime.
 
 Author: Patrick Kelly
 Email: patrickyunen@gmail.com
-Last revised: October 12, 2020
+Last revised: October 13, 2020
 '''
 
 
-from random import randint
+import random
 
 class FField:
 
     def __init__(self, prime, number):
         self.order = prime
         self.value = number
-        if self.fermat_test(self.order) == False:
+        if self.mr_test(self.order) == False:
             print('Field order must be prime!')
             exit()
 
@@ -48,28 +48,54 @@ class FField:
     #Get the inverse of n ∊ GF(p) using the (p-2) algorithm
         return self.__pow__(self.order - 2)
 
-    def mr_test(self, candidate, s=10):
-    #Miller-Rabin primality test for a candidate prime
-        if candidate == 2:
-            return True
-        if candidate % 2 == 0:
+
+    def mr_test(self, n, k=40):
+    #Miller-Rabin primality test
+        if n == 0 or n == 1:
             return False
-        u, r = decompose(candidate - 1)
-        alpha = randint(2, (candidate - 2))
-        z = pow(alpha, r, candidate)
-        if z != 1 and z != (candidate - 1):
-            for j in range(1, u):
-                z = (z ** 2) % candidate
-                if z == 1:
-                    return False
-            if z != (candidate - 1):
+        if n == 2:
+            return True
+        if n % 2 == 0:
+            return False
+
+        s = 0
+        d = n - 1
+        while d % 2 == 0:
+            d >>= 1
+            s += 1
+        assert (2 ** s * d == n - 1)
+
+        def trial_composite(a):
+            if pow(a, d, n) == 1:
                 return False
+            for i in range(s):
+                if pow(a, 2 ** i * d, n) == n - 1:
+                    return False
+            return True
+
+        for i in range(k):  # number of trials
+            a = random.randrange(2, n)
+            if trial_composite(a):
+                return False
+
         return True
 
-    def decompose(self, p):
-    #Given an odd p, decompose p-1 as (2 ** u)(r) where r is odd
-        u = 0
-        while (p % 2) == 0:
-            u += 1
-            p //= 2
-        return twos, int(p)
+
+
+def main():
+    x = FField(65537,31234)
+    y = FField(65537,601)
+
+    print(f'x = {x}')
+    print(f'y = {y}')
+    print('\n')
+    print(f'x ** -1 = {x.inverse()}')
+    print(f'y ** -1 = {y.inverse()}')
+    print('\n')
+    print(f'x + y = {x+y}')
+    print(f'x - y = {x-y}')
+    print(f'x * y = {x*y}')
+    print(f'x / y = {x/y}')
+
+if __name__ == '__main__':
+    main()
